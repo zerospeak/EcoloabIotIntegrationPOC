@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=EcolabP@ssw0rd123
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - ecolab_network
+
+  # Azure Storage Emulator (Azurite)
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    ports:
+      - "10000:10000" # Blob
+      - "10001:10001" # Queue
+      - "10002:10002" # Table
+    volumes:
+      - azurite_data:/data
+    networks:
+      - ecolab_network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./src/ApiGateway
+      dockerfile: Dockerfile
+    ports:
+      - "5000:80"
+      - "5001:443"
+    depends_on:
+      - sqlserver
+      - azurite
+      - event-processor
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=EcolabIoT;User Id=sa;Password=EcolabP@ssw0rd123;TrustServerCertificate=True;
+      - AzureStorage__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+    networks:
+      - ecolab_network
+
+  # IoT Device Simulator
+  iot-simulator:
+    build:
+      context: ./src/IoTSimulator
+      dockerfile: Dockerfile
+    depends_on:
+      - event-processor
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ServiceBusConnection=Endpoint=sb://localhost/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=dummy_key
+    networks:
+      - ecolab_network
+
+  # Event Processor (Azure Functions Emulator)
+  event-processor:
+    build:
+      context: ./src/EventProcessor
+      dockerfile: Dockerfile
+    ports:
+      - "7071:80"
+    depends_on:
+      - sqlserver
+      - azurite
+      - servicebus-emulator
+    environment:
+      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      - ServiceBusConnection=Endpoint=sb://localhost/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=dummy_key
+      - SqlConnectionString=Server=sqlserver;Database=EcolabIoT;User Id=sa;Password=EcolabP@ssw0rd123;TrustServerCertificate=True;
+    networks:
+      - ecolab_network
+
+  # ETL Pipeline Service
+  etl-pipeline:
+    build:
+      context: ./src/EtlPipeline
+      dockerfile: Dockerfile
+    depends_on:
+      - sqlserver
+      - azurite
+      - servicebus-emulator
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=EcolabIoT;User Id=sa;Password=EcolabP@ssw0rd123;TrustServerCertificate=True;
+      - AzureStorage__ConnectionString=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      - ServiceBusConnection=Endpoint=sb://localhost/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=dummy_key
+    networks:
+      - ecolab_network
+
+  # Service Bus Emulator
+  servicebus-emulator:
+    image: vhidvz/azure-service-bus-emulator
+    ports:
+      - "9000:9000" # HTTP port
+      - "9090:9090" # WebSocket port
+    environment:
+      - SERVICEBUS_HOST=0.0.0.0
+      - SERVICEBUS_PORT=9000
+      - SERVICEBUS_WS_PORT=9090
+    networks:
+      - ecolab_network
+
+  # Web Application (Angular + ASP.NET Core)
+  web-app:
+    build:
+      context: ./src/WebApp
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    environment:
+      - API_URL=http://api-gateway
+    networks:
+      - ecolab_network
+
+networks:
+  ecolab_network:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+  azurite_data:

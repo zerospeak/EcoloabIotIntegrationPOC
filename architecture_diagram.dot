@@ -1,0 +1,66 @@
+digraph G {
+  rankdir=TB;
+  node [shape=box, style=filled, fillcolor=lightblue, fontname="Arial", fontsize=12];
+  edge [fontname="Arial", fontsize=10];
+  
+  // Main components
+  IoTDevices [label="IoT Mouse Traps\n(Starbucks, McDonald's)", fillcolor=lightgreen];
+  IoTSimulator [label="IoT Device Simulator\n(.NET 8 Core)"];
+  ServiceBus [label="Azure Service Bus\n(Message Queue)", fillcolor=lightskyblue];
+  EventProcessor [label="Event Processor\n(Azure Functions)", fillcolor=lightskyblue];
+  ApiGateway [label="API Gateway\n(.NET 8 Core API)"];
+  EtlPipeline [label="ETL Pipeline\n(.NET 8 Core Service)"];
+  SqlServer [label="SQL Server\n(Operational Data)", fillcolor=lightgoldenrod];
+  BlobStorage [label="Azure Blob Storage\n(Raw & Processed Data)", fillcolor=lightskyblue];
+  WebApp [label="Web Application\n(Angular + ASP.NET Core)"];
+  
+  // Subgraphs for logical grouping
+  subgraph cluster_data_sources {
+    label="Data Sources";
+    style=filled;
+    color=lightgrey;
+    IoTDevices;
+    IoTSimulator;
+  }
+  
+  subgraph cluster_processing {
+    label="Data Processing";
+    style=filled;
+    color=lightgrey;
+    ServiceBus;
+    EventProcessor;
+    EtlPipeline;
+  }
+  
+  subgraph cluster_storage {
+    label="Data Storage";
+    style=filled;
+    color=lightgrey;
+    SqlServer;
+    BlobStorage;
+  }
+  
+  subgraph cluster_presentation {
+    label="Presentation";
+    style=filled;
+    color=lightgrey;
+    WebApp;
+  }
+  
+  // Connections
+  IoTDevices -> IoTSimulator [label="Simulates"];
+  IoTSimulator -> ServiceBus [label="Sends Events"];
+  ServiceBus -> EventProcessor [label="Triggers"];
+  EventProcessor -> ApiGateway [label="Updates Status"];
+  EventProcessor -> BlobStorage [label="Stores Event Data"];
+  ApiGateway -> SqlServer [label="CRUD Operations"];
+  EtlPipeline -> ServiceBus [label="Consumes Events"];
+  EtlPipeline -> SqlServer [label="Reads/Writes Data"];
+  EtlPipeline -> BlobStorage [label="Stores Raw/Processed Data"];
+  WebApp -> ApiGateway [label="REST API Calls"];
+  
+  // Add invisible edges to improve layout
+  {rank=same; IoTSimulator; ServiceBus;}
+  {rank=same; EventProcessor; EtlPipeline;}
+  {rank=same; SqlServer; BlobStorage;}
+}
