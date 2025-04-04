@@ -1,8 +1,8 @@
-# Ecolab IoT Integration Capstone Application Documentation
+# TerraFirma  IoT Integration Capstone Application Documentation
 
 ## Overview
 
-This document provides comprehensive documentation for the Ecolab IoT Integration Capstone Application, which demonstrates the skills required for a Senior .NET Developer position at Ecolab. The application showcases ETL systems and APIs for integrating IoT mouse trap data from locations like Starbucks and McDonald's into a central system similar to Ecolab's 3D platform.
+This document provides comprehensive documentation for the TerraFirma  IoT Integration Capstone Application, which demonstrates the skills required for a Senior .NET Developer position at TerraFirma . The application showcases ETL systems and APIs for integrating IoT mouse trap data from locations like Starbucks and McDonald's into a central system similar to TerraFirma 's 3D platform.
 
 ## Table of Contents
 
@@ -377,7 +377,7 @@ The application is configured using environment variables and configuration file
 
 ## Skills Demonstrated
 
-This capstone application demonstrates the following skills required for the Senior .NET Developer position at Ecolab:
+This capstone application demonstrates the following skills required for the Senior .NET Developer position at TerraFirma :
 
 ### Frontend Technologies
 
@@ -418,4 +418,4 @@ This capstone application demonstrates the following skills required for the Sen
 - **IoT Data Integration**: Demonstrated with simulated devices
 - **Data Transformation**: Implemented in the ETL service
 
-This application successfully demonstrates the skills required for a Senior .NET Developer position at Ecolab, with a focus on ETL systems and APIs for IoT data integration.
+This application successfully demonstrates the skills required for a Senior .NET Developer position at TerraFirma , with a focus on ETL systems and APIs for IoT data integration.
